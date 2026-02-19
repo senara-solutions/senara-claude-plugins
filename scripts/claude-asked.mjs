@@ -52,20 +52,27 @@ function forwardCommand(envelope, cfg) {
   });
   if (result.error) {
     warn(`Command error: ${result.error.message}`);
+  } else if (result.signal) {
+    warn(`Command killed by signal ${result.signal}`);
   } else if (result.status !== 0) {
     warn(`Command exited with status ${result.status}`);
   }
 }
 
-function forwardWebhook(envelope, cfg) {
+async function forwardWebhook(envelope, cfg) {
   if (!cfg.webhookUrl) {
     warn("CLAUDE_ASKED_WEBHOOK_URL is not set, skipping webhook forwarding");
-    return Promise.resolve();
+    return;
   }
 
   let url;
   try { url = new URL(cfg.webhookUrl); }
-  catch { warn(`Invalid webhook URL: ${cfg.webhookUrl}`); return Promise.resolve(); }
+  catch { warn("Invalid webhook URL (check CLAUDE_ASKED_WEBHOOK_URL)"); return; }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    warn(`Unsupported webhook protocol: ${url.protocol}`);
+    return;
+  }
 
   const body = Buffer.from(JSON.stringify(envelope), "utf8");
   const lib = url.protocol === "https:" ? https : http;
@@ -73,6 +80,7 @@ function forwardWebhook(envelope, cfg) {
   if (cfg.webhookBearer) headers["authorization"] = `Bearer ${cfg.webhookBearer}`;
 
   return new Promise((resolve) => {
+    let settled = false;
     const req = lib.request({
       method: "POST", hostname: url.hostname,
       port: url.port || (url.protocol === "https:" ? 443 : 80),
@@ -84,8 +92,14 @@ function forwardWebhook(envelope, cfg) {
         resolve();
       });
     });
-    req.on("timeout", () => { warn("Webhook request timed out"); req.destroy(); resolve(); });
-    req.on("error", (err) => { warn(`Webhook error: ${err.message}`); resolve(); });
+    req.on("timeout", () => {
+      if (!settled) { settled = true; warn("Webhook request timed out"); }
+      req.destroy();
+    });
+    req.on("error", (err) => {
+      if (!settled) { settled = true; warn(`Webhook error: ${err.message}`); }
+      resolve();
+    });
     req.write(body);
     req.end();
   });
@@ -96,6 +110,7 @@ function readAllStdin() {
     const chunks = [];
     process.stdin.on("data", (chunk) => chunks.push(chunk));
     process.stdin.on("end", () => resolve(Buffer.concat(chunks)));
+    process.stdin.on("error", () => resolve(Buffer.concat(chunks)));
     process.stdin.resume();
   });
 }
