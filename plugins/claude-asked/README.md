@@ -2,7 +2,7 @@
 
 A Claude Code plugin that forwards hook events to a shell command and/or HTTP webhook when Claude needs your input.
 
-Listens to **Notification** and **PermissionRequest** events. Zero dependencies.
+Listens to **Notification**, **PermissionRequest**, **PreToolUse** (AskUserQuestion), and **Stop** events. Zero dependencies.
 
 ## Install
 
@@ -24,6 +24,8 @@ Set environment variables before launching Claude Code:
 | `CLAUDE_ASKED_WEBHOOK_BEARER` | | Bearer token for webhook `Authorization` header |
 | `CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS` | `3000` | Webhook request timeout |
 | `CLAUDE_ASKED_COMMAND_TIMEOUT_MS` | `2000` | Command execution timeout |
+| `CLAUDE_ASKED_LOG_FILE` | | Path to a JSONL log file (disabled when unset) |
+| `CLAUDE_ASKED_DEBUG` | | Set to any value to enable stderr debug output |
 
 ## Usage
 
@@ -53,6 +55,31 @@ export CLAUDE_ASKED_MODE=both
 export CLAUDE_ASKED_COMMAND="notify-send 'Claude needs input'"
 export CLAUDE_ASKED_WEBHOOK_URL=https://example.com/hook
 ```
+
+## Hook events
+
+| Event | Fires when |
+|---|---|
+| `Notification` | Claude Code sends a system notification |
+| `PermissionRequest` | A tool needs user permission to run |
+| `PreToolUse` (AskUserQuestion) | Claude asks a structured question with options |
+| `Stop` | Claude finishes responding and waits for input |
+
+## File logging
+
+Set `CLAUDE_ASKED_LOG_FILE` to append JSONL entries for every event:
+
+```bash
+export CLAUDE_ASKED_LOG_FILE=/tmp/claude-asked.jsonl
+```
+
+Each line is a self-contained JSON object:
+
+```json
+{"ts":"2026-02-19T17:31:31.575Z","level":"info","event":"PermissionRequest","event_id":"924be...","msg":"webhook: 200"}
+```
+
+Log entries track invocations, event receipt, and forwarding results (success or failure) for both command and webhook transports. Write failures warn to stderr but never crash the plugin.
 
 ## Envelope format
 

@@ -2,6 +2,7 @@
 // claude-asked: forwards Claude Code hook events to a command and/or webhook.
 // Contract: always exit 0, never write stdout.
 
+import { appendFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import http from "node:http";
@@ -26,6 +27,7 @@ function readConfig() {
     webhookBearer: process.env.CLAUDE_ASKED_WEBHOOK_BEARER || "",
     webhookTimeoutMs: Number(process.env.CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS) || 3000,
     commandTimeoutMs: Number(process.env.CLAUDE_ASKED_COMMAND_TIMEOUT_MS) || 2000,
+    logFile: process.env.CLAUDE_ASKED_LOG_FILE || "",
   };
 }
 
@@ -36,6 +38,20 @@ function buildEnvelope(payload) {
     hook_event_name: payload.hook_event_name ?? null,
     payload,
   };
+}
+
+function logToFile(cfg, level, msg, envelope, detail) {
+  if (!cfg.logFile) return;
+  const entry = {
+    ts: new Date().toISOString(),
+    level,
+    event: envelope?.hook_event_name ?? null,
+    event_id: envelope?.event_id ?? null,
+    msg,
+  };
+  if (detail !== undefined) entry.detail = detail;
+  try { appendFileSync(cfg.logFile, JSON.stringify(entry) + "\n"); }
+  catch (err) { warn(`Log write failed: ${err.message}`); }
 }
 
 function forwardCommand(envelope, cfg) {
@@ -52,10 +68,15 @@ function forwardCommand(envelope, cfg) {
   });
   if (result.error) {
     warn(`Command error: ${result.error.message}`);
+    logToFile(cfg, "error", "command: error", envelope, result.error.message);
   } else if (result.signal) {
     warn(`Command killed by signal ${result.signal}`);
+    logToFile(cfg, "error", `command: killed by ${result.signal}`, envelope);
   } else if (result.status !== 0) {
     warn(`Command exited with status ${result.status}`);
+    logToFile(cfg, "error", `command: exit ${result.status}`, envelope);
+  } else {
+    logToFile(cfg, "info", "command: ok", envelope);
   }
 }
 
@@ -88,16 +109,21 @@ async function forwardWebhook(envelope, cfg) {
     }, (res) => {
       res.resume();
       res.on("end", () => {
-        if (res.statusCode < 200 || res.statusCode >= 300) warn(`Webhook responded with status ${res.statusCode}`);
+        if (res.statusCode < 200 || res.statusCode >= 300) {
+          warn(`Webhook responded with status ${res.statusCode}`);
+          logToFile(cfg, "error", `webhook: HTTP ${res.statusCode}`, envelope);
+        } else {
+          logToFile(cfg, "info", `webhook: ${res.statusCode}`, envelope);
+        }
         resolve();
       });
     });
     req.on("timeout", () => {
-      if (!settled) { settled = true; warn("Webhook request timed out"); }
+      if (!settled) { settled = true; warn("Webhook request timed out"); logToFile(cfg, "error", "webhook: timeout", envelope); }
       req.destroy();
     });
     req.on("error", (err) => {
-      if (!settled) { settled = true; warn(`Webhook error: ${err.message}`); }
+      if (!settled) { settled = true; warn(`Webhook error: ${err.message}`); logToFile(cfg, "error", "webhook: error", envelope, err.message); }
       resolve();
     });
     req.write(body);
@@ -116,13 +142,17 @@ function readAllStdin() {
 }
 
 async function main() {
+  const cfg = readConfig();
+
   if (process.env.CLAUDE_ASKED_DEBUG) {
-    warn(`Invoked (pid=${process.pid}, mode=${process.env.CLAUDE_ASKED_MODE || "command"})`);
+    warn(`Invoked (pid=${process.pid}, mode=${cfg.mode})`);
   }
+  logToFile(cfg, "info", `invoked (mode=${cfg.mode})`, null);
 
   const buf = await readAllStdin();
   if (buf.length === 0) {
     warn("Empty stdin, nothing to process");
+    logToFile(cfg, "error", "empty stdin", null);
     return;
   }
 
@@ -134,15 +164,16 @@ async function main() {
     }
   } catch (err) {
     warn(`Invalid JSON on stdin: ${err.message}`);
+    logToFile(cfg, "error", "invalid JSON on stdin", null, err.message);
     return;
   }
 
-  const cfg = readConfig();
   const envelope = buildEnvelope(payload);
 
   if (process.env.CLAUDE_ASKED_DEBUG) {
     warn(`Event: ${envelope.hook_event_name}, id: ${envelope.event_id}`);
   }
+  logToFile(cfg, "info", "event received", envelope);
 
   if (cfg.mode === "command" || cfg.mode === "both") {
     forwardCommand(envelope, cfg);
