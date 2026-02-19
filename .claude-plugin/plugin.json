@@ -1,0 +1,5 @@
+{
+  "name": "claude-asked",
+  "version": "0.1.0",
+  "description": "Forwards Claude Code question/permission events to a command or webhook."
+}
