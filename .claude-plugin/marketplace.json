@@ -1,0 +1,22 @@
+{
+  "name": "claude-code-plugins",
+  "description": "Claude Code plugins by Senara Solutions",
+  "owner": {
+    "name": "Senara Solutions"
+  },
+  "metadata": {
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "claude-asked",
+      "source": "./plugins/claude-asked",
+      "description": "Forwards Claude Code question/permission events to a command or webhook.",
+      "version": "0.1.0",
+      "category": "notifications",
+      "tags": ["hooks", "notifications", "webhooks"],
+      "license": "MIT"
+    }
+  ]
+}

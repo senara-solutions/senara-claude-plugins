@@ -1,0 +1,12 @@
+{
+  "name": "claude-asked",
+  "version": "0.1.0",
+  "description": "Forwards Claude Code question/permission events to a command or webhook.",
+  "author": {
+    "name": "Senara Solutions"
+  },
+  "repository": "https://github.com/senara-solutions/claude-code-plugins",
+  "license": "MIT",
+  "keywords": ["hooks", "notifications", "webhooks"],
+  "hooks": "./hooks/hooks.json"
+}

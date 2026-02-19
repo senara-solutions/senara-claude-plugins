@@ -1,33 +1,27 @@
-# claude-asked
+# claude-code-plugins
 
-Claude Code plugin that forwards Notification and PermissionRequest hook events to a command and/or webhook.
+Claude Code plugin marketplace by Senara Solutions.
 
-## Project structure
+## Structure
 
 ```
-.claude-plugin/plugin.json    Plugin manifest
-hooks/hooks.json              Hook registration (Notification + PermissionRequest)
-scripts/claude-asked.mjs      Hook handler (single file, ~147 lines)
+.claude-plugin/marketplace.json    Marketplace manifest (lists all plugins)
+plugins/<name>/                    Each plugin in its own directory
+plugins/<name>/.claude-plugin/     Plugin manifest + hooks registration
+plugins/<name>/scripts/            Plugin scripts
+plugins/<name>/README.md           Plugin-specific documentation
 ```
 
-## Constraints
+## Conventions
 
-- **Always exit 0** -- never block Claude Code
-- **Never write stdout** -- Claude Code interprets hook stdout as control JSON
-- **Zero dependencies** -- only `node:` built-in modules
-- **Node.js 18+** required (uses `crypto.randomUUID()`)
+- Each plugin is self-contained in `plugins/<name>/`
+- Plugins use `${CLAUDE_PLUGIN_ROOT}` for relative paths in hook commands
+- Zero external dependencies -- only Node.js built-in modules
+- Node.js 18+ required
+- All hook scripts must: always exit 0, never write stdout
 
-## Testing
+## Adding a new plugin
 
-Pipe sample JSON payloads into the script and check exit code + stderr:
-
-```bash
-echo '{"hook_event_name":"PermissionRequest","session_id":"s","transcript_path":"/t","cwd":"/","permission_mode":"d","tool_name":"Bash","tool_input":{}}' | \
-  CLAUDE_ASKED_MODE=command CLAUDE_ASKED_COMMAND="cat > /dev/null" \
-  node scripts/claude-asked.mjs 2>&1; echo "exit: $?"
-```
-
-## Key files
-
-- `scripts/claude-asked.mjs` -- all plugin logic lives here
-- `docs/solutions/integration-issues/nodejs-hook-plugin-pitfalls.md` -- documented bugs and patterns
+1. Create `plugins/<name>/` with `.claude-plugin/plugin.json` and `hooks/hooks.json`
+2. Add an entry to `.claude-plugin/marketplace.json` in the `plugins` array
+3. Add a row to the root `README.md` plugins table
