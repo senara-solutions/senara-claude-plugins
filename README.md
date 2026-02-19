@@ -1,11 +1,11 @@
-# claude-code-plugins
+# senara-claude-plugins
 
 Claude Code plugin marketplace by [Senara Solutions](https://github.com/senara-solutions).
 
 ## Install
 
 ```bash
-claude marketplace add https://github.com/senara-solutions/claude-code-plugins
+claude marketplace add https://github.com/senara-solutions/senara-claude-plugins
 ```
 
 ## Plugins

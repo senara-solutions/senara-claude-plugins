@@ -1,4 +1,4 @@
-# claude-code-plugins
+# senara-claude-plugins
 
 Claude Code plugin marketplace by Senara Solutions.
 
