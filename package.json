@@ -1,0 +1,15 @@
+{
+  "name": "claude-asked",
+  "version": "0.1.0",
+  "description": "Claude Code plugin that forwards question/permission events to a command or webhook.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    ".claude-plugin/",
+    "hooks/",
+    "scripts/"
+  ],
+  "license": "MIT"
+}
