@@ -7,6 +7,5 @@
   },
   "repository": "https://github.com/senara-solutions/senara-claude-plugins",
   "license": "MIT",
-  "keywords": ["hooks", "notifications", "webhooks"],
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["hooks", "notifications", "webhooks"]
 }
