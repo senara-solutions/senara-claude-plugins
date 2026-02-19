@@ -9,5 +9,8 @@ node_modules/
 *.iml
 .vscode/
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # OS
 .DS_Store

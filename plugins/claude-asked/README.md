@@ -137,14 +137,10 @@ Useful for debugging when stderr isn't visible (async hooks) or when using webho
 The marketplace caches plugins at install time. After updating the source, sync the cache:
 
 ```bash
-cp plugins/claude-asked/hooks/hooks.json \
-  ~/.claude/plugins/cache/senara-claude-plugins/claude-asked/0.1.0/hooks/hooks.json
-
-cp plugins/claude-asked/scripts/claude-asked.mjs \
-  ~/.claude/plugins/cache/senara-claude-plugins/claude-asked/0.1.0/scripts/claude-asked.mjs
+./scripts/sync-cache.sh
 ```
 
-Then restart Claude Code.
+The script reads the cache path from `~/.claude/plugins/installed_plugins.json`, mirrors the source with `rsync`, and prints what changed. Then restart Claude Code.
 
 ### General
 
