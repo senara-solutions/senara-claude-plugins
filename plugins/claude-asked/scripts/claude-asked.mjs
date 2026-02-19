@@ -116,6 +116,10 @@ function readAllStdin() {
 }
 
 async function main() {
+  if (process.env.CLAUDE_ASKED_DEBUG) {
+    warn(`Invoked (pid=${process.pid}, mode=${process.env.CLAUDE_ASKED_MODE || "command"})`);
+  }
+
   const buf = await readAllStdin();
   if (buf.length === 0) {
     warn("Empty stdin, nothing to process");
@@ -135,6 +139,10 @@ async function main() {
 
   const cfg = readConfig();
   const envelope = buildEnvelope(payload);
+
+  if (process.env.CLAUDE_ASKED_DEBUG) {
+    warn(`Event: ${envelope.hook_event_name}, id: ${envelope.event_id}`);
+  }
 
   if (cfg.mode === "command" || cfg.mode === "both") {
     forwardCommand(envelope, cfg);
