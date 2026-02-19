@@ -12,7 +12,7 @@ claude marketplace add https://github.com/senara-solutions/senara-claude-plugins
 
 | Plugin | Description |
 |--------|-------------|
-| [claude-asked](plugins/claude-asked/) | Forwards hook events to a command or webhook when Claude needs your input |
+| [claude-asked](plugins/claude-asked/) | Get notified when Claude is waiting for you -- forwards events to a shell command, webhook, or both |
 
 ## License
 
