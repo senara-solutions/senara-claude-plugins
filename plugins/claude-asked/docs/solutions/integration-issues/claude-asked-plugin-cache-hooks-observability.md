@@ -119,7 +119,6 @@ Log points: invocation, event receipt, command result (ok/error/signal), webhook
 ```bash
 # Test logging
 export CLAUDE_ASKED_LOG_FILE=/tmp/claude-asked.jsonl
-export CLAUDE_ASKED_MODE=command
 export CLAUDE_ASKED_COMMAND="true"
 
 # Trigger events in Claude Code, then:

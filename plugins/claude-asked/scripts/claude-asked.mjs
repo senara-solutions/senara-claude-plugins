@@ -8,22 +8,14 @@ import crypto from "node:crypto";
 import http from "node:http";
 import https from "node:https";
 
-const VALID_MODES = new Set(["command", "webhook", "both"]);
-
 function warn(msg) {
   process.stderr.write(`[claude-asked] ${msg}\n`);
 }
 
 function readConfig() {
-  let mode = (process.env.CLAUDE_ASKED_MODE || "command").toLowerCase();
-  if (!VALID_MODES.has(mode)) {
-    warn(`Unknown mode "${mode}", falling back to "command"`);
-    mode = "command";
-  }
   return {
-    mode,
-    command: process.env.CLAUDE_ASKED_COMMAND || "",
-    webhookUrl: process.env.CLAUDE_ASKED_WEBHOOK_URL || "",
+    command: (process.env.CLAUDE_ASKED_COMMAND || "").trim(),
+    webhookUrl: (process.env.CLAUDE_ASKED_WEBHOOK_URL || "").trim(),
     webhookBearer: process.env.CLAUDE_ASKED_WEBHOOK_BEARER || "",
     webhookTimeoutMs: Number(process.env.CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS) || 3000,
     commandTimeoutMs: Number(process.env.CLAUDE_ASKED_COMMAND_TIMEOUT_MS) || 2000,
@@ -143,11 +135,18 @@ function readAllStdin() {
 
 async function main() {
   const cfg = readConfig();
+  const transports = [cfg.command && "command", cfg.webhookUrl && "webhook"].filter(Boolean).join(",");
 
   if (process.env.CLAUDE_ASKED_DEBUG) {
-    warn(`Invoked (pid=${process.pid}, mode=${cfg.mode})`);
+    warn(`Invoked (pid=${process.pid}, transports=${transports || "none"})`);
   }
-  logToFile(cfg, "info", `invoked (mode=${cfg.mode})`, null);
+  logToFile(cfg, "info", `invoked (transports=${transports || "none"})`, null);
+
+  if (!cfg.command && !cfg.webhookUrl) {
+    warn("No transports configured (set CLAUDE_ASKED_COMMAND and/or CLAUDE_ASKED_WEBHOOK_URL)");
+    logToFile(cfg, "warn", "no transports configured", null);
+    return;
+  }
 
   const buf = await readAllStdin();
   if (buf.length === 0) {
@@ -175,12 +174,8 @@ async function main() {
   }
   logToFile(cfg, "info", "event received", envelope);
 
-  if (cfg.mode === "command" || cfg.mode === "both") {
-    forwardCommand(envelope, cfg);
-  }
-  if (cfg.mode === "webhook" || cfg.mode === "both") {
-    await forwardWebhook(envelope, cfg);
-  }
+  if (cfg.command) forwardCommand(envelope, cfg);
+  if (cfg.webhookUrl) await forwardWebhook(envelope, cfg);
 }
 
 main().catch((err) => warn(`Unexpected error: ${err.message}`)).finally(() => process.exit(0));

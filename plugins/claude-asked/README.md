@@ -12,7 +12,6 @@ claude marketplace add https://github.com/senara-solutions/senara-claude-plugins
 claude plugin install claude-asked
 
 # 3. Set up notifications (pick one)
-export CLAUDE_ASKED_MODE=command
 export CLAUDE_ASKED_COMMAND="notify-send 'Claude needs you'"
 
 # 4. Restart Claude Code
@@ -38,42 +37,36 @@ Every event includes `session_id`, `cwd`, and `transcript_path`.
 ### Desktop notifications (Linux)
 
 ```bash
-export CLAUDE_ASKED_MODE=command
 export CLAUDE_ASKED_COMMAND="notify-send 'Claude Code' 'Waiting for your input'"
 ```
 
 ### Desktop notifications (macOS)
 
 ```bash
-export CLAUDE_ASKED_MODE=command
 export CLAUDE_ASKED_COMMAND="osascript -e 'display notification \"Waiting for your input\" with title \"Claude Code\"'"
 ```
 
 ### Mobile push via ntfy.sh
 
 ```bash
-export CLAUDE_ASKED_MODE=command
 export CLAUDE_ASKED_COMMAND="curl -s -d 'Claude needs you' https://ntfy.sh/my-claude-topic"
 ```
 
 ### Slack incoming webhook
 
 ```bash
-export CLAUDE_ASKED_MODE=webhook
 export CLAUDE_ASKED_WEBHOOK_URL=https://hooks.slack.com/services/T.../B.../xxx
 ```
 
 ### Log events as JSONL
 
 ```bash
-export CLAUDE_ASKED_MODE=command
 export CLAUDE_ASKED_COMMAND="jq -c . >> /tmp/claude-events.jsonl"
 ```
 
 ### Command + webhook together
 
 ```bash
-export CLAUDE_ASKED_MODE=both
 export CLAUDE_ASKED_COMMAND="notify-send 'Claude needs you'"
 export CLAUDE_ASKED_WEBHOOK_URL=https://hooks.slack.com/services/T.../B.../xxx
 ```
@@ -84,7 +77,6 @@ Set environment variables before launching Claude Code:
 
 | Variable | Default | Description |
 |---|---|---|
-| `CLAUDE_ASKED_MODE` | `command` | `command`, `webhook`, or `both` |
 | `CLAUDE_ASKED_COMMAND` | | Shell command (receives JSON envelope on stdin) |
 | `CLAUDE_ASKED_WEBHOOK_URL` | | URL to POST JSON to (http or https) |
 | `CLAUDE_ASKED_WEBHOOK_BEARER` | | Bearer token for webhook `Authorization` header |
@@ -146,8 +138,7 @@ The script reads the cache path from `~/.claude/plugins/installed_plugins.json`,
 
 - **Errors go to stderr** with a `[claude-asked]` prefix.
 - **The plugin never blocks Claude Code** -- it runs async, always exits 0, never writes stdout.
-- **Invalid mode** falls back to `command` with a stderr warning.
-- **Missing config** (e.g., `mode=webhook` but no URL) warns to stderr and skips that transport.
+- **Missing config** (no `CLAUDE_ASKED_COMMAND` or `CLAUDE_ASKED_WEBHOOK_URL`) warns to stderr and exits.
 - **Enable debug logging:** `export CLAUDE_ASKED_DEBUG=1` to see invocation details on stderr.
 - **Enable file logging:** `export CLAUDE_ASKED_LOG_FILE=/tmp/claude-asked.jsonl` for a persistent audit trail.
 
