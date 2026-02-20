@@ -1,5 +1,5 @@
 ---
-name: init
+name: claude-asked:init
 description: >-
   Initialize claude-asked plugin configuration. Use when the user says
   "set up claude-asked", "initialize notifications", or runs /claude-asked:init.

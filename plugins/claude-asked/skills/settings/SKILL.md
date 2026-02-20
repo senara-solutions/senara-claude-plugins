@@ -1,5 +1,5 @@
 ---
-name: settings
+name: claude-asked:settings
 description: >-
   Configure claude-asked notification settings interactively. Use when the user
   says "configure notifications", "change webhook", "update settings", or runs
