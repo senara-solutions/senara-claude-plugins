@@ -11,13 +11,29 @@ claude marketplace add https://github.com/senara-solutions/senara-claude-plugins
 # 2. Enable the plugin (follow the interactive prompts)
 claude plugin install claude-asked
 
-# 3. Set up notifications (pick one)
-export CLAUDE_ASKED_COMMAND="notify-send 'Claude needs you'"
-
-# 4. Restart Claude Code
+# 3. Restart Claude Code, then run the setup wizard
+/claude-asked:init
 ```
 
 Verify hooks are loaded via the `/hooks` menu.
+
+## Setup
+
+The setup wizard walks you through configuring notifications:
+
+```
+/claude-asked:init
+```
+
+This creates `~/.claude/claude-asked/config.json` and asks you to choose a notification command and/or webhook.
+
+To change settings later:
+
+```
+/claude-asked:settings
+```
+
+You can also configure manually via the config file or environment variables (see [Configuration](#configuration) below).
 
 ## What it captures
 
