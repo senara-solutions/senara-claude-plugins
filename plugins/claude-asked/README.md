@@ -73,17 +73,40 @@ export CLAUDE_ASKED_WEBHOOK_URL=https://hooks.slack.com/services/T.../B.../xxx
 
 ## Configuration
 
-Set environment variables before launching Claude Code:
+### Config file
 
-| Variable | Default | Description |
-|---|---|---|
-| `CLAUDE_ASKED_COMMAND` | | Shell command (receives JSON envelope on stdin) |
-| `CLAUDE_ASKED_WEBHOOK_URL` | | URL to POST JSON to (http or https) |
-| `CLAUDE_ASKED_WEBHOOK_BEARER` | | Bearer token for webhook `Authorization` header |
-| `CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS` | `3000` | Webhook request timeout (ms) |
-| `CLAUDE_ASKED_COMMAND_TIMEOUT_MS` | `2000` | Command execution timeout (ms) |
-| `CLAUDE_ASKED_LOG_FILE` | | Path to a JSONL log file (disabled when unset) |
-| `CLAUDE_ASKED_DEBUG` | | Set to any value for stderr debug output |
+Create `~/.claude/claude-asked/config.json` for persistent defaults:
+
+```bash
+mkdir -p ~/.claude/claude-asked
+cat > ~/.claude/claude-asked/config.json << 'EOF'
+{
+  "command": "notify-send 'Claude needs you'",
+  "webhookUrl": "https://example.com/hook",
+  "webhookBearer": "sk-...",
+  "webhookTimeoutMs": 3000,
+  "commandTimeoutMs": 2000,
+  "logFile": "/tmp/claude-asked.jsonl",
+  "debug": true
+}
+EOF
+```
+
+All fields are optional. Environment variables override config file values.
+
+### Environment variables
+
+Set environment variables before launching Claude Code to override config file values:
+
+| Variable | Config key | Default | Description |
+|---|---|---|---|
+| `CLAUDE_ASKED_COMMAND` | `command` | | Shell command (receives JSON envelope on stdin) |
+| `CLAUDE_ASKED_WEBHOOK_URL` | `webhookUrl` | | URL to POST JSON to (http or https) |
+| `CLAUDE_ASKED_WEBHOOK_BEARER` | `webhookBearer` | | Bearer token for webhook `Authorization` header |
+| `CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS` | `webhookTimeoutMs` | `3000` | Webhook request timeout (ms) |
+| `CLAUDE_ASKED_COMMAND_TIMEOUT_MS` | `commandTimeoutMs` | `2000` | Command execution timeout (ms) |
+| `CLAUDE_ASKED_LOG_FILE` | `logFile` | | Path to a JSONL log file (disabled when unset) |
+| `CLAUDE_ASKED_DEBUG` | `debug` | | Set to any value for stderr debug output |
 
 ## Envelope format
 

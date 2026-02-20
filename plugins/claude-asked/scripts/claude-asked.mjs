@@ -2,8 +2,10 @@
 // claude-asked: forwards Claude Code hook events to a command and/or webhook.
 // Contract: always exit 0, never write stdout.
 
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import crypto from "node:crypto";
 import http from "node:http";
 import https from "node:https";
@@ -12,14 +14,28 @@ function warn(msg) {
   process.stderr.write(`[claude-asked] ${msg}\n`);
 }
 
+function loadConfigFile() {
+  try {
+    const raw = readFileSync(join(homedir(), ".claude", "claude-asked", "config.json"), "utf8");
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return parsed;
+  } catch (err) {
+    if (err.code !== "ENOENT") warn(`Config file error: ${err.message}`);
+    return {};
+  }
+}
+
 function readConfig() {
+  const file = loadConfigFile();
   return {
-    command: (process.env.CLAUDE_ASKED_COMMAND || "").trim(),
-    webhookUrl: (process.env.CLAUDE_ASKED_WEBHOOK_URL || "").trim(),
-    webhookBearer: process.env.CLAUDE_ASKED_WEBHOOK_BEARER || "",
-    webhookTimeoutMs: Number(process.env.CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS) || 3000,
-    commandTimeoutMs: Number(process.env.CLAUDE_ASKED_COMMAND_TIMEOUT_MS) || 2000,
-    logFile: process.env.CLAUDE_ASKED_LOG_FILE || "",
+    command:          (process.env.CLAUDE_ASKED_COMMAND          ?? file.command       ?? "").trim(),
+    webhookUrl:       (process.env.CLAUDE_ASKED_WEBHOOK_URL      ?? file.webhookUrl    ?? "").trim(),
+    webhookBearer:    (process.env.CLAUDE_ASKED_WEBHOOK_BEARER   ?? file.webhookBearer ?? "").trim(),
+    webhookTimeoutMs:  Number(process.env.CLAUDE_ASKED_WEBHOOK_TIMEOUT_MS) || file.webhookTimeoutMs || 3000,
+    commandTimeoutMs:  Number(process.env.CLAUDE_ASKED_COMMAND_TIMEOUT_MS) || file.commandTimeoutMs || 2000,
+    logFile:           process.env.CLAUDE_ASKED_LOG_FILE         ?? file.logFile       ?? "",
+    debug:             process.env.CLAUDE_ASKED_DEBUG             ?? file.debug         ?? "",
   };
 }
 
@@ -90,7 +106,7 @@ async function forwardWebhook(envelope, cfg) {
   const body = Buffer.from(JSON.stringify(envelope), "utf8");
   const lib = url.protocol === "https:" ? https : http;
   const headers = { "content-type": "application/json", "content-length": String(body.length) };
-  if (cfg.webhookBearer) headers["authorization"] = `Bearer ${cfg.webhookBearer}`;
+  if (cfg.webhookBearer) headers["Authorization"] = `Bearer ${cfg.webhookBearer}`;
 
   return new Promise((resolve) => {
     let settled = false;
@@ -137,7 +153,7 @@ async function main() {
   const cfg = readConfig();
   const transports = [cfg.command && "command", cfg.webhookUrl && "webhook"].filter(Boolean).join(",");
 
-  if (process.env.CLAUDE_ASKED_DEBUG) {
+  if (cfg.debug) {
     warn(`Invoked (pid=${process.pid}, transports=${transports || "none"})`);
   }
   logToFile(cfg, "info", `invoked (transports=${transports || "none"})`, null);
@@ -169,7 +185,7 @@ async function main() {
 
   const envelope = buildEnvelope(payload);
 
-  if (process.env.CLAUDE_ASKED_DEBUG) {
+  if (cfg.debug) {
     warn(`Event: ${envelope.hook_event_name}, id: ${envelope.event_id}`);
   }
   logToFile(cfg, "info", "event received", envelope);

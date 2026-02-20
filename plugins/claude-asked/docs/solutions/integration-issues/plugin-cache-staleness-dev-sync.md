@@ -96,6 +96,8 @@ rsync -av --delete "$SOURCE_DIR/" "$CACHE_DIR/"
 
 **After git operations**: Always sync after `git pull`, `git checkout`, or branch switching. These change source files but leave cache untouched.
 
+**Config file is not cached**: The config file at `~/.claude/claude-asked/config.json` is read directly from `~/.claude/`, not from the plugin cache. Config file changes take effect on the next hook invocation without a cache sync.
+
 ## Verification
 
 Confirm cache matches source:
