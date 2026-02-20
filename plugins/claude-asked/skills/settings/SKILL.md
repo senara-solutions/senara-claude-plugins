@@ -4,7 +4,6 @@ description: >-
   Configure claude-asked notification settings interactively. Use when the user
   says "configure notifications", "change webhook", "update settings", or runs
   /claude-asked:settings. Walks through essential config fields.
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Write
