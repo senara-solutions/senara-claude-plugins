@@ -1,6 +1,6 @@
 # claude-asked
 
-Get notified when Claude is waiting for you. A Claude Code plugin that forwards hook events to a shell command, HTTP webhook, or both.
+Get notified when Claude needs your attention. A Claude Code plugin that fires when Claude asks a question, requests permission, or finishes work — forwarding the event to a shell command, HTTP webhook, or both.
 
 ## Quick start
 
@@ -37,11 +37,10 @@ You can also configure manually via the config file or environment variables (se
 
 ## What it captures
 
-The plugin fires on four hook events:
+The plugin fires on three hook events — each represents a moment you need to come back:
 
 | Event | When it fires | Key payload fields |
 |---|---|---|
-| `Notification` | Claude Code sends a system notification | `message`, `notification_type` |
 | `PermissionRequest` | A tool needs user permission | `tool_name`, `tool_input`, `permission_mode` |
 | `PreToolUse` (AskUserQuestion) | Claude asks a structured question | `tool_name`, `tool_input.questions` |
 | `Stop` | Claude finishes and waits for input | `last_assistant_message` |
